@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Tag Detection</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        #video { width: 100%; max-width: 400px; border: 2px solid black; }
+        button { margin-top: 10px; padding: 10px 20px; font-size: 16px; }
+        #error-msg { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Service Tag Detection</h1>
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <br>
+    <button id="capture">Capture</button>
+    <button id="switch-camera">Switch Camera</button>
+    
+    <h2>Detected Service Tag:</h2>
+    <p id="service-tag">---</p>
+    <p id="error-msg"></p>
+    
+    <script>
+        let video = document.getElementById('video');
+        let canvas = document.getElementById('canvas');
+        let captureButton = document.getElementById('capture');
+        let switchButton = document.getElementById('switch-camera');
+        let serviceTagText = document.getElementById('service-tag');
+        let errorMsg = document.getElementById('error-msg');
+        let stream = null;
+        let usingFrontCamera = true;
+
+        function startCamera(facingMode = "environment") {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } })
+                .then(newStream => {
+                    stream = newStream;
+                    video.srcObject = newStream;
+                })
+                .catch(err => {
+                    console.error("Camera access error:", err);
+                    errorMsg.innerText = "Camera access denied or not available!";
+                });
+        }
+
+        startCamera();
+
+        switchButton.addEventListener('click', () => {
+            usingFrontCamera = !usingFrontCamera;
+            startCamera(usingFrontCamera ? "user" : "environment");
+        });
+
+        captureButton.addEventListener('click', () => {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                const formData = new FormData();
+                formData.append('frame', blob, 'frame.jpg');
+
+                fetch('/process_frame', { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        serviceTagText.innerText = `Service Tag: ${data.tag}`;
+                    } else {
+                        serviceTagText.innerText = "No service tag detected.";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorMsg.innerText = "Error processing image!";
+                });
+            }, 'image/jpeg');
+        });
+    </script>
+</body>
+</html>
