@@ -120,6 +120,5 @@ def upload_file():
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    from waitress import serve
-    logger.info("Starting Service Tag OCR API server with Waitress...")
-    serve(app, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 10000))  # Default to 10000
+    app.run(host="0.0.0.0", port=port)
