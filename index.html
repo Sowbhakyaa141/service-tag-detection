@@ -57,30 +57,31 @@
         });
 
         captureButton.addEventListener('click', () => {
-            const context = canvas.getContext('2d');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            canvas.toBlob((blob) => {
-                const formData = new FormData();
-                formData.append('frame', blob, 'frame.jpg');
+    canvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append('image', blob, 'frame.jpg');
 
-                fetch('/process_frame', { method: 'POST', body: formData })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "success") {
-                        serviceTagText.innerText = `Service Tag: ${data.tag}`;
-                    } else {
-                        serviceTagText.innerText = "No service tag detected.";
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    errorMsg.innerText = "Error processing image!";
-                });
-            }, 'image/jpeg');
+        fetch('/upload', { method: 'POST', body: formData })
+        .then(response => response.json())
+        .then(data => {
+            if (data.service_tag) {
+                serviceTagText.innerText = `Service Tag: ${data.service_tag}`;
+            } else {
+                serviceTagText.innerText = "No service tag detected.";
+                errorMsg.innerText = data.error || "Error detecting service tag.";
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            errorMsg.innerText = "Error processing image!";
         });
+    }, 'image/jpeg');
+});
     </script>
 </body>
 </html>
