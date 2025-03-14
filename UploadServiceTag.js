@@ -29,14 +29,14 @@ const UploadServiceTag = () => {
             name: "service_tag.jpg",
             type: "image/jpeg",
         });
-
+    
         try {
-            let response = await fetch("https://service-tag-detection-4.onrender.com/upload", {
+            let response = await fetch("https://service-tag-detection.onrender.com/upload", { // ✅ Updated URL here
                 method: "POST",
                 body: formData,
                 headers: { "Content-Type": "multipart/form-data" },
             });
-
+    
             let result = await response.json();
             if (response.ok && result.service_tag) {
                 setServiceTag(result.service_tag);
@@ -47,6 +47,7 @@ const UploadServiceTag = () => {
             Alert.alert("Upload Error", `Failed to upload image: ${error.message}`);
         }
     };
+    
 
     return (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -58,3 +59,4 @@ const UploadServiceTag = () => {
 };
 
 export default UploadServiceTag;
+
