@@ -8,6 +8,13 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import logging
 
+# Ensure PaddlePaddle is installed dynamically (for Render)
+try:
+    import paddle
+except ImportError:
+    os.system("pip install paddlepaddle==2.6.2")
+    import paddle
+
 # Set up logging
 logging.basicConfig(level=logging.INFO, 
                     format="%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s")
@@ -23,7 +30,7 @@ ocr = PaddleOCR(use_angle_cls=True, lang="en")
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
-# Regex pattern for Service Tag (Improved)
+# Regex pattern for Service Tag
 pattern = r'(?:st|svc\s*tag|service\s*tag|s\/n)[:\s]*([a-zA-Z0-9]{7})'
 
 # Ensure upload folder exists
@@ -109,7 +116,7 @@ def upload_file():
                             
                             # Delete temp file before returning
                             os.remove(processed_path)
-                            return jsonify({"service_tag": service_tag, "confidence": round(confidence, 2)})
+                            return jsonify({"service_tag": service_tag, "confidence": round(confidence, 2)}), 200
         
         logger.info(f"No service tag found. Detected texts: {detected_texts}")
         os.remove(processed_path)
